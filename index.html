@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кто ты у Кинга</title>
+<style>
+/* Layout: one narrow column like a pulp paperback page; one question per screen, result as a "cover" */
+:root{
+  --bg:#1d0b0d; --panel:#2b1316; --ink:#f2e4d6; --muted:#b99f93;
+  --blood:#c3262f; --lamp:#e9a63c; --line:#4a2428; --light:#8fb7a8;
+  --display: Georgia, "Times New Roman", "PT Serif", serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:24px 40px;
+  background-image:radial-gradient(ellipse at 50% -10%, rgba(233,166,60,.12), transparent 60%);}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--lamp)}
+h1{font-family:var(--display);font-style:italic;font-weight:700;font-size:clamp(34px,9vw,52px);line-height:1.02;margin:0;text-wrap:balance}
+h1 span{color:var(--blood)}
+.lead{color:var(--muted);margin:0;max-width:60ch}
+.btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:600;padding:14px 22px;border-radius:2px;background:var(--blood);color:var(--ink);letter-spacing:.02em}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn:focus-visible,.opt:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.progress{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--lamp);width:0;transition:width .3s}
+.q{font-family:var(--display);font-size:clamp(24px,6vw,30px);line-height:1.2;margin:0;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{appearance:none;text-align:left;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:14px 16px;cursor:pointer;transition:border-color .15s,transform .15s}
+.opt:hover{border-color:var(--lamp);transform:translateX(3px)}
+.cover{background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--blood);padding:24px 20px;display:flex;flex-direction:column;gap:14px}
+.cover.hero{border-top-color:var(--light)}
+.side{align-self:flex-start;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--blood);color:var(--blood)}
+.cover.hero .side{border-color:var(--light);color:var(--light)}
+.cover .book{font-size:13px;color:var(--lamp);letter-spacing:.08em;text-transform:uppercase}
+.cover h2{font-family:var(--display);font-style:italic;font-size:clamp(30px,8vw,42px);line-height:1.05;margin:0}
+.cover p{margin:0}
+.cover dl{margin:0;display:grid;gap:10px}
+.cover dt{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.cover dd{margin:2px 0 0}
+.others{font-size:14px;color:var(--muted)}
+.others b{color:var(--ink);font-weight:600}
+.note{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <section id="start">
+    <div class="wrap">
+      <div class="eyebrow">Тест на Хэллоуин · 12 вопросов</div>
+      <h1>Кто ты во вселенной <span>Стивена Кинга?</span></h1>
+      <p class="lead">Монстр или герой? Отвечайте честно, как на приёме у психолога. Тест шуточный, но клоун в ливнёвке всё равно ждёт.</p>
+      <div class="row"><button class="btn" id="go">Начать</button></div>
+    </div>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="wrap">
+      <div class="progress"><span id="num">Вопрос 1 из 12</span><span class="eyebrow">Дерри, штат Мэн</span></div>
+      <div class="bar"><i id="fill"></i></div>
+      <h2 class="q" id="qtext"></h2>
+      <div class="opts" id="opts"></div>
+    </div>
+  </section>
+
+  <section id="result" hidden>
+    <div class="wrap">
+      <div class="eyebrow">Ваш результат</div>
+      <article class="cover" id="cover">
+        <span class="side" id="rside"></span>
+        <div class="book" id="rbook"></div>
+        <h2 id="rname"></h2>
+        <p id="rtext"></p>
+        <dl>
+          <div><dt>Сильная сторона</dt><dd id="rplus"></dd></div>
+          <div><dt>Совет от автора теста</dt><dd id="rtip"></dd></div>
+        </dl>
+      </article>
+      <p class="others" id="rothers"></p>
+      <div class="row">
+        <button class="btn" id="copy">Скопировать результат</button>
+        <button class="btn ghost" id="again">Пройти ещё раз</button>
+      </div>
+      <p class="note" id="copied" hidden></p>
+    </div>
+  </section>
+</div>
+
+<script>
+const C = {
+  pw:{dark:1,name:"Пеннивайз",book:"«Оно»",text:"Вы душа любой компании. Особенно той, что не успела убежать. Вы тонко чувствуете людей, знаете их слабые места и обожаете праздничный стиль.",plus:"Харизма и талант находить подход к каждому. Буквально к каждому.",tip:"Не всем нужен шарик. Спросите сначала."},
+  we:{dark:1,name:"Вендиго",book:"«Кладбище домашних животных»",text:"Вы древняя сила, которая не признаёт слова «конец». Вы умеете возвращать ушедшее: бывших, старые проекты, давние обиды. Только возвращается всё почему-то не совсем таким.",plus:"Невероятное упорство и верность прошлому.",tip:"Не всё стоит выкапывать обратно. Иногда отпустить лучше."},
+  cr:{dark:1,name:"Кристина",book:"«Кристина»",text:"Вы яркая, стильная и с характером. Любите один раз и навсегда, а соперников не выносите. Совсем. Под капотом у вас бьётся горячее сердце пятидесятых.",plus:"Преданность и способность восстановиться после любой аварии.",tip:"Ревность не доказательство любви. И пристегнитесь."},
+  ca:{dark:1,name:"Кэрри Уайт",book:"«Кэрри»",text:"Тихая, недооценённая и с огромным скрытым потенциалом. Окружающие пока не догадываются, на что вы способны. Лучше бы им и не узнавать.",plus:"Сила, которая годами копилась внутри.",tip:"На вечеринки ходите в тёмном и садитесь поближе к выходу."},
+  jk:{dark:1,name:"Джек Торранс",book:"«Сияние»",text:"Творческая натура с большими планами и маленьким терпением. Вам нужна тишина, чтобы работать, но в тишине вам почему-то становится хуже.",plus:"Талант, амбиции и умение работать без выходных.",tip:"Возьмите отпуск. Только не в пустом отеле в горах и не зимой."},
+  jc:{dark:0,name:"Джон Коффи",book:"«Зелёная миля»",text:"У вас огромное сердце. Вы чувствуете чужую боль как свою и берёте её на себя, даже когда никто не просил.",plus:"Эмпатия, мягкость и способность лечить одним присутствием.",tip:"Выдыхайте. Чужая боль не обязана жить в вас. Это называется границы."},
+  ad:{dark:0,name:"Энди Дюфрейн",book:"«Побег из Шоушенка»",text:"Вы спокойны, терпеливы и умеете ждать. У вас есть план на двадцать лет вперёд, и вы ни с кем им не делитесь.",plus:"Надежда, выдержка и аккуратная бухгалтерия.",tip:"Ваш план сработает. Просто не забудьте взять запасную одежду."},
+  bm:{dark:0,name:"Беверли Марш",book:"«Оно»",text:"Вы смелая, верная и не бросаете своих. Когда все разбегаются, вы берёте рогатку и идёте вперёд.",plus:"Смелость и умение собрать вокруг себя команду.",tip:"Вместе не страшно. Звоните друзьям чаще."},
+  ro:{dark:0,name:"Роланд Дискейн",book:"«Тёмная башня»",text:"Вы видите цель и идёте к ней. Через пустыни, горы и семь томов. Остановиться? Не слышали такого слова.",plus:"Целеустремлённость и меткость. Вы всегда попадаете в точку.",tip:"Иногда люди рядом важнее башни на горизонте."}
+};
+// [основной герой (+2), близкий по духу (+1), текст]
+const Q = [
+  ["Пятница, вечер. Ваши планы?",[
+    ["jk","we","Запереться в кабинете и наконец поработать. Пусть никто не стучит."],
+    ["bm","ro","Собрать друзей и пойти туда, куда взрослые запрещали."],
+    ["ca","jc","Остаться дома. Только бы никто не позвал на вечеринку."],
+    ["cr","jk","Кататься по ночному городу под старый рок-н-ролл."]]],
+  ["Сосед снова сверлит в восемь утра. Вы:",[
+    ["pw","ca","Улыбаюсь ему в глазок. Долго."],
+    ["ad","ro","Терплю. У меня свой проект, и он тоже шумный."],
+    ["jc","bm","Сочувствую. Вешать полку одному в восемь утра очень грустно."],
+    ["jk","cr","Стучу в стену. Потом топором. Шучу. Наверное."]]],
+  ["Если бы у вас была суперсила, то какая?",[
+    ["pw","jk","Читать мысли. Особенно те, которые люди прячут."],
+    ["ca","cr","Чтобы всё вокруг слушалось одного взгляда: двери, свет, ситуация."],
+    ["jc","ad","Делать так, чтобы людям становилось легче. Даже если мне от этого тяжелее."],
+    ["we","pw","Отменять потери. Чтобы ничего не уходило насовсем."]]],
+  ["Любимый жанр книг:",[
+    ["bm","jc","Приключения про дружбу. Обязательно с картой."],
+    ["ad","ro","Книги о минералах. И старая Библия, она очень вместительная."],
+    ["ro","bm","Эпос. Длинный. Лучше в семи томах."],
+    ["jk","we","Мои собственные. Те, что я никак не допишу."]]],
+  ["Как вы проявляете себя на работе?",[
+    ["jk","ad","Печатаю одну и ту же фразу. Это называется стабильность."],
+    ["ro","ad","Ищу смысл. Он где-то на горизонте."],
+    ["jc","ca","Работаю на совесть, хотя меня здесь явно недооценили."],
+    ["cr","pw","Ревную коллег к начальнику. И начальника к коллегам."]]],
+  ["Как вы выбираете, куда поехать в отпуск?",[
+    ["bm","ro","Главное, с кем. А куда, уже неважно."],
+    ["pw","we","Тихий городок, где меня никто не знает. Пока что."],
+    ["ca","cr","Туда, где точно не встретишь никого из прошлого."],
+    ["ad","jc","Тёплое море и маленький городок на побережье. Я давно его присмотрел."]]],
+  ["Ваш стиль в одежде:",[
+    ["jk","ca","Фланелевая рубашка и лицо «я в порядке, я просто работаю»."],
+    ["pw","cr","Яркий, праздничный, с помпонами."],
+    ["cr","bm","Красное с белым, винтаж пятидесятых, всё блестит."],
+    ["ro","we","Пыльный плащ, кобура, ничего лишнего."]]],
+  ["Ваш главный страх:",[
+    ["bm","we","Что взрослые окажутся опаснее монстров."],
+    ["ca","bm","Выпускной."],
+    ["jc","ro","Темнота. Особенно когда гаснет свет."],
+    ["we","cr","Страх? Это меня боятся, когда в лесу воет ветер."]]],
+  ["Вас позвали на корпоратив. Вы:",[
+    ["pw","jk","Приду в образе. Этот вечер запомнят все. Навсегда."],
+    ["jk","cr","Пообещаю не пить. Обещание продержится до бара."],
+    ["ca","jc","Постою у стенки. Главное, чтобы на меня ничего не пролили."],
+    ["cr","pw","Приеду на своей машине. И никому не дам её трогать."]]],
+  ["Вас незаслуженно обидели. Ваша реакция:",[
+    ["ad","bm","Промолчу. Но лет через двадцать все всё поймут."],
+    ["jc","ad","Мне больше жаль того, кто обидел."],
+    ["ro","we","Запомню и пойду дальше. У меня есть дела поважнее."],
+    ["cr","ca","Случайно перееду обидчика. Дважды. Ладно, трижды."]]],
+  ["Идеальное место для жизни:",[
+    ["pw","we","Тихий городок с хорошо развитой канализацией."],
+    ["we","jk","Дом у старого кладбища в лесу. Тихо, и все возвращаются."],
+    ["ro","bm","Нет никакого места. Есть дорога."],
+    ["jc","ad","Где светло, а под полом живёт ручная мышка."]]],
+  ["Что вы делаете, когда скучно?",[
+    ["we","pw","Ухожу гулять подальше, туда, где кончаются тропинки."],
+    ["ad","ro","Затеваю долгий проект. Очень долгий. Понемногу каждый день."],
+    ["bm","ad","Зову друзей. Скука проходит, когда рядом свои."],
+    ["ca","we","Сижу в своей комнате и жду, когда все оставят меня в покое."]]]
+];
+let i=0, score={};
+const $=id=>document.getElementById(id);
+function show(id){["start","quiz","result"].forEach(s=>$(s).hidden=s!==id);window.scrollTo(0,0)}
+function start(){i=0;score={};Object.keys(C).forEach(k=>score[k]=0);show("quiz");render()}
+function render(){
+  const [q,opts]=Q[i];
+  $("num").textContent=`Вопрос ${i+1} из ${Q.length}`;
+  $("fill").style.width=(i/Q.length*100)+"%";
+  $("qtext").textContent=q;
+  const box=$("opts");box.innerHTML="";
+  opts.forEach(([k,kin,t])=>{const b=document.createElement("button");b.className="opt";b.textContent=t;
+    b.onclick=()=>{score[k]+=2;score[kin]+=1;i++;i<Q.length?render():finish()};box.appendChild(b)});
+}
+function finish(){
+  // при ничьей порядок среди равных случайный
+  const ranked=Object.keys(score).map(k=>[k,Math.random()]).sort((a,b)=>score[b[0]]-score[a[0]]||a[1]-b[1]).map(x=>x[0]);
+  const top=ranked[0], c=C[top];
+  $("cover").className="cover"+(c.dark?"":" hero");
+  $("rside").textContent=c.dark?"Тёмная сторона":"Светлая сторона";
+  $("rbook").textContent=c.book;$("rname").textContent=c.name;$("rtext").textContent=c.text;
+  $("rplus").textContent=c.plus;$("rtip").textContent=c.tip;
+  const s=C[ranked[1]];
+  let extra=`А ещё в вас немного от героя по имени <b>${s.name}</b> (${s.book}).`;
+  if(s.dark!==c.dark) extra+=c.dark?" Так что светлая сторона у вас тоже есть.":" Так что и тёмная сторона у вас найдётся.";
+  $("rothers").innerHTML=extra;
+  $("copied").hidden=true;show("result");
+}
+$("go").onclick=start;$("again").onclick=start;
+$("copy").onclick=()=>{
+  const c=C[Object.keys(C).find(k=>C[k].name===$("rname").textContent)];
+  const t=`Тест «Кто ты во вселенной Стивена Кинга?»: мой результат — ${c.name}, ${c.book} (${c.dark?"тёмная":"светлая"} сторона). ${c.tip}`;
+  const done=m=>{$("copied").textContent=m;$("copied").hidden=false};
+  try{navigator.clipboard.writeText(t).then(()=>done("Скопировано. Можно вставить в чат или сторис."),()=>done(t))}catch(e){done(t)}
+};
+</script>
+</body>
+</html>
